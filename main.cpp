@@ -8,13 +8,12 @@ bool isValidInput(int mapSize, int mines)
 {
 	if (mapSize > 10 or mapSize < 3 or mines > mapSize * 3 or mines < 1)
 	{
-		std::cout << "Try again" << std::endl;
+		std::cout << "Invalid input. Try again" << std::endl;
 		return false;
 	}
 
 	return true;
 }
-
 
 void generateUniqueRandomCoordinates(int size, int mines, int coordinates[][2]) 
 {
@@ -57,25 +56,25 @@ void generateUniqueRandomCoordinates(int size, int mines, int coordinates[][2])
 		coordinates[i][0] = x;
 		coordinates[i][1] = y;
 
-		std::cout << "Mine " << i + 1 << ": (" << x << ", " << y << ")\n";
+		//std::cout << "Mine " << i + 1 << ": (" << x << ", " << y << ")\n";
 	}
 }
 
-void createMap(char map[][MAX_SIZE], int size)
+void createPlainMap(char map[][MAX_SIZE], int size)
 {
 	for (int i = 0; i < size; i++)
 	{
 
 		for (int j = 0; j < size; j++)
 		{
-				map[i][j] = '0';
+			map[i][j] = '0';
 		}
 	}
 }
 
 void markMinesOnGrid(char map[][MAX_SIZE], int size, int numberOfMines, int mines[][2])
 {
-	createMap(map, size);
+	createPlainMap(map, size);
 	generateUniqueRandomCoordinates(size, numberOfMines, mines);
 	int mineCoordinateX = 0;
 	int mineCoordinateY = 0;
@@ -88,8 +87,49 @@ void markMinesOnGrid(char map[][MAX_SIZE], int size, int numberOfMines, int mine
 	}
 }
 
-void drawMap(char map[][MAX_SIZE], int size)
+void checkIfMine(char c, int& counter)
 {
+	if (c == '#')
+		counter++;
+}
+
+int checkForAdjacentMines(char map[][MAX_SIZE], int size, int row, int column)
+{
+	int counter = 0;
+
+	checkIfMine(map[row + 1][column], counter);
+	checkIfMine(map[row - 1][column], counter);
+	checkIfMine(map[row][column + 1], counter);
+	checkIfMine(map[row][column - 1], counter);
+	checkIfMine(map[row + 1][column + 1], counter);
+	checkIfMine(map[row + 1][column - 1], counter);
+	checkIfMine(map[row - 1][column + 1], counter);
+	checkIfMine(map[row - 1][column - 1], counter);
+
+	return counter;
+
+}
+void numberOfAdjacentMines(char map[][MAX_SIZE], int size)
+{
+	for (int i = 0; i < size; i++)
+	{
+		for (int j = 0; j < size; j++)
+		{
+			if (map[i][j] != '#')
+			{
+				int numberOfAdjacentMines = checkForAdjacentMines(map, size, i, j);
+				map[i][j] = (numberOfAdjacentMines + '0');
+			}
+
+			//std::cout << map[i][j];
+		}
+	}
+}
+
+void drawMap(char map[][MAX_SIZE], int size, int numberOfMines, int mines[][2])
+{
+	markMinesOnGrid(map, size, numberOfMines, mines);
+	numberOfAdjacentMines(map, size);
 	std::cout << std::endl;
 	for (int i = 0; i < size; i++)
 	{
@@ -125,11 +165,11 @@ int main()
 	std::cout << "Command must be enterted like that: command x-coordinate y-coordinate" << std::endl;
 	std::cout << "Possible commands are open/mark/unmark" << std::endl;
 	std::cout << "Example: open 1 3" << std::endl;
-	markMinesOnGrid(map, mapSize, mines, mineCoordinates);
+	//markMinesOnGrid(map, mapSize, mines, mineCoordinates);
 	while (true)
 	{
 		
-		drawMap(map, mapSize);
+		drawMap(map, mapSize, mines, mineCoordinates);
 		
 		std::cin.getline(command, 10);
 		std::cin >> x >> y;
