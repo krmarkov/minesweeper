@@ -15,6 +15,35 @@ bool isValidInput(int mapSize, int mines)
 	return true;
 }
 
+bool areStringsEqual(const char* first, const char* second) 
+{
+	if (!first or !second) 
+		return false;
+
+	while (*first != '\0' && *second != '\0')
+	{
+		if (*first != *second)
+			return false;
+
+		first++;
+		second++;
+	}
+	return (*first == '\0' && *second == '\0');
+}
+
+int strLength(const char str[]) 
+{
+	int length = 0;
+	int index = 0;
+
+	while (str[index] != '\0') 
+	{
+		index++;
+		length++;
+	}
+	return length;
+}
+
 void generateUniqueRandomCoordinates(int size, int mines, int coordinates[][2]) 
 {
 	// Seed for the random number generator
@@ -31,7 +60,8 @@ void generateUniqueRandomCoordinates(int size, int mines, int coordinates[][2])
 		int x, y;
 
 		// Generate and check for uniqueness in a single loop
-		do {
+		do 
+		{
 			x = distribution(gen);
 			y = distribution(gen);
 
@@ -46,17 +76,14 @@ void generateUniqueRandomCoordinates(int size, int mines, int coordinates[][2])
 				}
 			}
 
-			if (isUnique) {
+			if (isUnique)
 				break;  // Exit the loop if coordinates are unique
-			}
 
 		} while (true);
 
 		// Store the unique coordinates in the array
 		coordinates[i][0] = x;
 		coordinates[i][1] = y;
-
-		//std::cout << "Mine " << i + 1 << ": (" << x << ", " << y << ")\n";
 	}
 }
 
@@ -64,7 +91,6 @@ void createPlainMap(char map[][MAX_SIZE], int size)
 {
 	for (int i = 0; i < size; i++)
 	{
-
 		for (int j = 0; j < size; j++)
 		{
 			map[i][j] = '0';
@@ -107,8 +133,8 @@ int checkForAdjacentMines(char map[][MAX_SIZE], int size, int row, int column)
 	checkIfMine(map[row - 1][column - 1], counter);
 
 	return counter;
-
 }
+
 void numberOfAdjacentMines(char map[][MAX_SIZE], int size)
 {
 	for (int i = 0; i < size; i++)
@@ -121,15 +147,18 @@ void numberOfAdjacentMines(char map[][MAX_SIZE], int size)
 				map[i][j] = (numberOfAdjacentMines + '0');
 			}
 
-			//std::cout << map[i][j];
 		}
 	}
 }
 
-void drawMap(char map[][MAX_SIZE], int size, int numberOfMines, int mines[][2])
+void generateMap(char map[][MAX_SIZE], int size, int numberOfMines, int mines[][2])
 {
 	markMinesOnGrid(map, size, numberOfMines, mines);
 	numberOfAdjacentMines(map, size);
+}
+
+void drawMap(char map[][MAX_SIZE], int size)
+{
 	std::cout << std::endl;
 	for (int i = 0; i < size; i++)
 	{
@@ -139,6 +168,38 @@ void drawMap(char map[][MAX_SIZE], int size, int numberOfMines, int mines[][2])
 		}
 		std::cout << std::endl;
 	}
+	std::cout << std::endl;
+}
+
+void drawMaskMap(char map[][MAX_SIZE], int size)
+{
+	for (int i = 0; i < size; i++)
+	{
+		for (int j = 0; j < size; j++)
+		{
+			std::cout << '0' << " ";
+		}
+		std::cout << std::endl;
+	}
+}
+
+void open(char map[][MAX_SIZE], int coordX, int coordY, bool& stillPlaying)
+{
+	if (map[coordX][coordY] == '#')
+	{
+		stillPlaying = false;
+		std::cout << "Game over";
+	}
+
+	else
+	{
+
+	}
+}
+
+void mark(char map[][MAX_SIZE], int coordX, int coordY)
+{
+	map[coordX][coordY] = '*';
 }
 
 int main()
@@ -158,20 +219,33 @@ int main()
 
 	char map[MAX_SIZE][MAX_SIZE];
 	int mineCoordinates[MAX_SIZE][2];
-	
 
 	int x = 0, y = 0;
 	char command[10];
+
+	char openCommand[] = "open";
+	char markCommand[] = "mark";
+
+	bool stillPlaying = true;
+
 	std::cout << "Command must be enterted like that: command x-coordinate y-coordinate" << std::endl;
 	std::cout << "Possible commands are open/mark/unmark" << std::endl;
 	std::cout << "Example: open 1 3" << std::endl;
-	//markMinesOnGrid(map, mapSize, mines, mineCoordinates);
-	while (true)
+
+	generateMap(map, mapSize, mines, mineCoordinates);
+	do
 	{
-		
-		drawMap(map, mapSize, mines, mineCoordinates);
-		
-		std::cin.getline(command, 10);
+		drawMap(map, mapSize);
+		std::cin >> command;
 		std::cin >> x >> y;
-	}
+
+		if (areStringsEqual(command, openCommand))
+			open(map, x, y, stillPlaying);
+
+		else if (areStringsEqual(command, markCommand))
+			mark(map, x, y);
+	} 
+	while (stillPlaying);
+
+	return 0;
 }
