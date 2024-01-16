@@ -93,7 +93,7 @@ void createPlainMap(char map[][MAX_SIZE], int size)
 	{
 		for (int j = 0; j < size; j++)
 		{
-			map[i][j] = '0';
+			map[i][j] = '-';
 		}
 	}
 }
@@ -123,14 +123,13 @@ int checkForAdjacentMines(char map[][MAX_SIZE], int size, int row, int column)
 {
 	int counter = 0;
 
-	checkIfMine(map[row + 1][column], counter);
-	checkIfMine(map[row - 1][column], counter);
-	checkIfMine(map[row][column + 1], counter);
-	checkIfMine(map[row][column - 1], counter);
-	checkIfMine(map[row + 1][column + 1], counter);
-	checkIfMine(map[row + 1][column - 1], counter);
-	checkIfMine(map[row - 1][column + 1], counter);
-	checkIfMine(map[row - 1][column - 1], counter);
+	for (int i = -1; i <= 1; i++)
+	{
+		for (int j = -1; j <= 1; j++)
+		{
+			checkIfMine(map[row + i][column + j], counter);
+		}
+	}
 
 	return counter;
 }
@@ -146,7 +145,6 @@ void numberOfAdjacentMines(char map[][MAX_SIZE], int size)
 				int numberOfAdjacentMines = checkForAdjacentMines(map, size, i, j);
 				map[i][j] = (numberOfAdjacentMines + '0');
 			}
-
 		}
 	}
 }
@@ -171,35 +169,64 @@ void drawMap(char map[][MAX_SIZE], int size)
 	std::cout << std::endl;
 }
 
-void drawMaskMap(char map[][MAX_SIZE], int size)
+void revealCell(char map[][MAX_SIZE], char maskMap[][MAX_SIZE], int size, int coordX, int coordY)
 {
-	for (int i = 0; i < size; i++)
+	if (coordX < 0 or coordX >= size or coordY < 0 or coordY >= size or maskMap[coordX][coordY] != '-')
+		return;  
+
+	maskMap[coordX][coordY] = map[coordX][coordY];
+
+	if (checkForAdjacentMines(map, size, coordX, coordY))
+		return;
+
+	for (int i = -1; i <= 1; i++)
 	{
-		for (int j = 0; j < size; j++)
+		for (int j = -1; j <= 1; j++)
 		{
-			std::cout << '0' << " ";
+			//if (coordX < 0 or coordX >= size or coordY < 0 or coordY >= size or map[coordX][coordY] == '#')
+			//	continue;
+
+			revealCell(map, maskMap, size, coordX + i, coordY + j);
 		}
-		std::cout << std::endl;
 	}
 }
 
-void open(char map[][MAX_SIZE], int coordX, int coordY, bool& stillPlaying)
+void open(char map[][MAX_SIZE], char maskMap[][MAX_SIZE],int size, int coordX, int coordY, bool& stillPlaying)
 {
+	if (maskMap[coordX][coordY] == '*')
+	{
+		std::cout << "Cannot open marked cell" << std::endl;
+		return;
+	}
+
 	if (map[coordX][coordY] == '#')
 	{
 		stillPlaying = false;
+		drawMap(map, size);
 		std::cout << "Game over";
+		return;
 	}
 
-	else
-	{
-
-	}
+	revealCell(map, maskMap, size, coordX, coordY);
 }
 
-void mark(char map[][MAX_SIZE], int coordX, int coordY)
+void mark(char maskMap[][MAX_SIZE], int coordX, int coordY)
 {
-	map[coordX][coordY] = '*';
+	if (maskMap[coordX][coordY] != '-')
+	{
+		std::cout << "Cannot mark revealed cell" << std::endl;
+		return;
+	}
+
+	maskMap[coordX][coordY] = '*';
+}
+
+void unmark(char maskMap[][MAX_SIZE], int coordX, int coordY)
+{
+	if (maskMap[coordX][coordY] != '*')
+		std::cout << "Cell is not marked" << std::endl;
+
+	maskMap[coordX][coordY] = '-';
 }
 
 int main()
@@ -218,6 +245,7 @@ int main()
 	while (!isValidInput(mapSize, mines));
 
 	char map[MAX_SIZE][MAX_SIZE];
+	char maskMap[MAX_SIZE][MAX_SIZE] = { 0 };
 	int mineCoordinates[MAX_SIZE][2];
 
 	int x = 0, y = 0;
@@ -225,6 +253,7 @@ int main()
 
 	char openCommand[] = "open";
 	char markCommand[] = "mark";
+	char unmarkCommand[] = "unmark";
 
 	bool stillPlaying = true;
 
@@ -233,17 +262,23 @@ int main()
 	std::cout << "Example: open 1 3" << std::endl;
 
 	generateMap(map, mapSize, mines, mineCoordinates);
+	createPlainMap(maskMap, mapSize);
+
 	do
 	{
-		drawMap(map, mapSize);
+		//drawMap(map, mapSize);
+		drawMap(maskMap, mapSize);
 		std::cin >> command;
 		std::cin >> x >> y;
 
 		if (areStringsEqual(command, openCommand))
-			open(map, x, y, stillPlaying);
+			open(map, maskMap, mapSize, x, y, stillPlaying);
 
 		else if (areStringsEqual(command, markCommand))
-			mark(map, x, y);
+			mark(maskMap, x, y);
+
+		else if (areStringsEqual(command, unmarkCommand))
+			unmark(maskMap, x, y);
 	} 
 	while (stillPlaying);
 
