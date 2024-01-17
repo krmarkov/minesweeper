@@ -1,18 +1,42 @@
 #include <iostream>
 #include <random>
+#include <cstdlib>
+#include <ctime>
 
 constexpr int MAX_SIZE = 10;
+constexpr int MIN_SIZE = 3;
 constexpr int MAX_MINES = MAX_SIZE * 3;
+constexpr int MIN_MINES = 1;
 
 bool isValidInput(int mapSize, int mines)
 {
-	if (mapSize > 10 or mapSize < 3 or mines > mapSize * 3 or mines < 1)
+	if (mapSize > MAX_SIZE or mapSize < MIN_SIZE or mines >	MAX_MINES or mines < MIN_MINES)
 	{
 		std::cout << "Invalid input. Try again" << std::endl;
 		return false;
 	}
 
 	return true;
+}
+
+void validateInput(int& mapSize, int& mines)
+{
+	do
+	{
+		std::cout << "Enter size of the map (3 <= size <= 10):" << std::endl;
+		std::cin >> mapSize;
+
+		std::cout << "Enter number of hidden mines(1 <= mines <= 3 * size):" << std::endl;
+		std::cin >> mines;
+	} 
+	while (!isValidInput(mapSize, mines));
+}
+
+void instructions()
+{
+	std::cout << "Command must be enterted like that: command x-coordinate y-coordinate" << std::endl;
+	std::cout << "Possible commands are open/mark/unmark" << std::endl;
+	std::cout << "Example: open 1 3" << std::endl;
 }
 
 bool areStringsEqual(const char* first, const char* second) 
@@ -31,61 +55,92 @@ bool areStringsEqual(const char* first, const char* second)
 	return (*first == '\0' && *second == '\0');
 }
 
-int strLength(const char str[]) 
+int randBetween(int min, int max) 
 {
-	int length = 0;
-	int index = 0;
-
-	while (str[index] != '\0') 
-	{
-		index++;
-		length++;
-	}
-	return length;
+	return min + rand() % (max - min + 1); 
 }
 
-void generateUniqueRandomCoordinates(int size, int mines, int coordinates[][2]) 
+void uniqueCoordinates(int size, int mines, int coordinates[][2], int& x, int& y, int current)
 {
-	// Seed for the random number generator
-	std::random_device rd;
+	do
+	{
+		x = randBetween(0, size - 1);
+		y = randBetween(0, size - 1);
 
-	// Mersenne Twister engine
-	std::mt19937 gen(rd());
+		// Check if the coordinates are unique
+		bool isUnique = true;
+		for (int j = 0; j < current; j++)
+		{
+			if (x == coordinates[j][0] && y == coordinates[j][1])
+			{
+				isUnique = false;
+				break;
+			}
+		}
 
-	// Uniform distribution in the range [0, size]
-	std::uniform_int_distribution<int> distribution(0, size - 1);
+		if (isUnique)
+			break;  // Exit the loop if coordinates are unique
 
-	for (int i = 0; i < mines; i++) 
+	}
+	while (true);
+}
+
+void generateUniqueRandomCoordinates(int size, int mines, int coordinates[][2])
+{
+	for (int i = 0; i < mines; i++)
 	{
 		int x, y;
 
 		// Generate and check for uniqueness in a single loop
-		do 
-		{
-			x = distribution(gen);
-			y = distribution(gen);
+		uniqueCoordinates(size, mines, coordinates, x, y, i);
 
-			// Check if the coordinates are unique
-			bool isUnique = true;
-			for (int j = 0; j < i; j++) 
-			{
-				if (x == coordinates[j][0] && y == coordinates[j][1]) 
-				{
-					isUnique = false;
-					break;
-				}
-			}
-
-			if (isUnique)
-				break;  // Exit the loop if coordinates are unique
-
-		} while (true);
-
-		// Store the unique coordinates in the array
 		coordinates[i][0] = x;
 		coordinates[i][1] = y;
 	}
 }
+
+//void generateUniqueRandomCoordinates(int size, int mines, int coordinates[][2]) 
+//{
+//	// Seed for the random number generator
+//	std::random_device rd;
+//
+//	// Mersenne Twister engine
+//	std::mt19937 gen(rd());
+//
+//	// Uniform distribution in the range [0, size]
+//	std::uniform_int_distribution<int> distribution(0, size - 1);
+//
+//	for (int i = 0; i < mines; i++) 
+//	{
+//		int x, y;
+//
+//		// Generate and check for uniqueness in a single loop
+//		do 
+//		{
+//			x = distribution(gen);
+//			y = distribution(gen);
+//
+//			// Check if the coordinates are unique
+//			bool isUnique = true;
+//			for (int j = 0; j < i; j++) 
+//			{
+//				if (x == coordinates[j][0] && y == coordinates[j][1]) 
+//				{
+//					isUnique = false;
+//					break;
+//				}
+//			}
+//
+//			if (isUnique)
+//				break;  // Exit the loop if coordinates are unique
+//
+//		} while (true);
+//
+//		// Store the unique coordinates in the array
+//		coordinates[i][0] = x;
+//		coordinates[i][1] = y;
+//	}
+//}
 
 void createPlainMap(char map[][MAX_SIZE], int size)
 {
@@ -113,12 +168,6 @@ void markMinesOnGrid(char map[][MAX_SIZE], int size, int numberOfMines, int mine
 	}
 }
 
-void checkIfMine(char c, int& counter)
-{
-	if (c == '#')
-		counter++;
-}
-
 int checkForAdjacentMines(char map[][MAX_SIZE], int size, int row, int column)
 {
 	int counter = 0;
@@ -127,7 +176,8 @@ int checkForAdjacentMines(char map[][MAX_SIZE], int size, int row, int column)
 	{
 		for (int j = -1; j <= 1; j++)
 		{
-			checkIfMine(map[row + i][column + j], counter);
+			if (map[row + i][column + j] == '#')
+				counter++;
 		}
 	}
 
@@ -183,9 +233,6 @@ void revealCell(char map[][MAX_SIZE], char maskMap[][MAX_SIZE], int size, int co
 	{
 		for (int j = -1; j <= 1; j++)
 		{
-			//if (coordX < 0 or coordX >= size or coordY < 0 or coordY >= size or map[coordX][coordY] == '#')
-			//	continue;
-
 			revealCell(map, maskMap, size, coordX + i, coordY + j);
 		}
 	}
@@ -229,58 +276,75 @@ void unmark(char maskMap[][MAX_SIZE], int coordX, int coordY)
 	maskMap[coordX][coordY] = '-';
 }
 
+bool isGameWon(char map[][MAX_SIZE], char maskMap[][MAX_SIZE], int size)
+{
+	bool isWon = true;
+	for (int i = 0; i < size; i++)
+	{
+		for (int j = 0; j < size; j++)
+		{
+			if ((maskMap[i][j] == '-' or maskMap[i][j] == '*') && map[i][j] != '#')
+				isWon = false;
+		}
+	}
+
+	return isWon;
+}
+
+void play(char map[][MAX_SIZE], char maskMap[][MAX_SIZE], char* command, int size, int& coordX, int& coordY, bool& stillPlaying)
+{
+
+	drawMap(map, size);
+	drawMap(maskMap, size);
+	std::cin >> command;
+	std::cin >> coordX >> coordY;
+
+	if (areStringsEqual(command, "open"))
+		open(map, maskMap, size, coordX, coordY, stillPlaying);
+
+	else if (areStringsEqual(command, "mark"))
+		mark(maskMap, coordX, coordY);
+
+	else if (areStringsEqual(command, "unmark"))
+		unmark(maskMap, coordX, coordY);
+
+	else
+	{
+		std::cout << "Invalid command" << std::endl;
+	}
+
+	stillPlaying = !isGameWon(map, maskMap, size);
+}
+
 int main()
 {
+	srand(time(0));
+
 	int mapSize = 0;
 	int mines = 0;
 
-	do
-	{
-		std::cout << "Enter size of the map (3 <= size <= 10):" << std::endl;
-		std::cin >> mapSize;
-		
-		std::cout << "Enter number of hidden mines(1 <= mines <= 3 * size):" << std::endl;
-		std::cin >> mines;
-	} 
-	while (!isValidInput(mapSize, mines));
+	validateInput(mapSize, mines);
 
 	char map[MAX_SIZE][MAX_SIZE];
-	char maskMap[MAX_SIZE][MAX_SIZE] = { 0 };
+	char maskMap[MAX_SIZE][MAX_SIZE];
 	int mineCoordinates[MAX_SIZE][2];
 
 	int x = 0, y = 0;
 	char command[10];
 
-	char openCommand[] = "open";
-	char markCommand[] = "mark";
-	char unmarkCommand[] = "unmark";
-
 	bool stillPlaying = true;
 
-	std::cout << "Command must be enterted like that: command x-coordinate y-coordinate" << std::endl;
-	std::cout << "Possible commands are open/mark/unmark" << std::endl;
-	std::cout << "Example: open 1 3" << std::endl;
-
+	instructions();
 	generateMap(map, mapSize, mines, mineCoordinates);
 	createPlainMap(maskMap, mapSize);
 
 	do
-	{
-		//drawMap(map, mapSize);
-		drawMap(maskMap, mapSize);
-		std::cin >> command;
-		std::cin >> x >> y;
-
-		if (areStringsEqual(command, openCommand))
-			open(map, maskMap, mapSize, x, y, stillPlaying);
-
-		else if (areStringsEqual(command, markCommand))
-			mark(maskMap, x, y);
-
-		else if (areStringsEqual(command, unmarkCommand))
-			unmark(maskMap, x, y);
+	{	
+		play(map, maskMap, command, mapSize, x, y, stillPlaying);
 	} 
 	while (stillPlaying);
+
+	std::cout << "You won" << std::endl;
 
 	return 0;
 }
