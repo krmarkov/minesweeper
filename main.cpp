@@ -43,6 +43,7 @@ void instructions()
 	std::cout << "Commands must be enterted like that: command x-coordinate y-coordinate" << std::endl;
 	std::cout << "Possible commands are open/mark/unmark" << std::endl;
 	std::cout << "Example: open 1 3" << std::endl;
+	std::cout << "The coordinates of the top left corner are 0 0" << std::endl;
 	std::cout << "To win you have to open all cells that are not mines" << std::endl;
 	std::cout << "It is not necessary to mark all mine cells. Just don't open them" << std::endl;
 	std::cout << "If you open a mine cell, you lose" << std::endl;
@@ -117,8 +118,6 @@ void markMinesOnGrid(char map[][MAX_SIZE], int size, int numberOfMines, int mine
 {
 	createPlainMap(map, size);
 	generateUniqueRandomCoordinates(size, numberOfMines, mines);
-	int mineCoordinateX = 0;
-	int mineCoordinateY = 0;
 
 	for (int i = 0; i < numberOfMines; i++) 
 	{
@@ -168,11 +167,28 @@ void generateMap(char map[][MAX_SIZE], int size, int numberOfMines, int mines[][
 void drawMap(const char map[][MAX_SIZE], int size)
 {
 	std::cout << std::endl;
-	for (int i = 0; i < size; i++)
+	for (int i = -2; i < size; i++)
 	{
+		if (i >= 0)
+			std::cout << i << "| ";
 		for (int j = 0; j < size; j++)
 		{
-			std::cout << map[i][j] << " ";
+			if (i == -2)
+			{
+				if (j == 0)
+					std::cout << "   " << j;
+				else
+					std::cout << " " << j;
+			}
+			else if (i == -1)
+			{
+				if (j == 0)
+					std::cout << "  --";
+				else
+					std::cout << "--";
+			}
+			else
+				std::cout << map[i][j] << " ";
 		}
 		std::cout << std::endl;
 	}
