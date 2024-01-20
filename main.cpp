@@ -291,7 +291,7 @@ bool isGameWon(const char map[][MAX_SIZE], const char maskMap[][MAX_SIZE], int s
 
 void play(char map[][MAX_SIZE], char maskMap[][MAX_SIZE], char* command, int size, int& coordX, int& coordY, bool& stillPlaying)
 {
-	drawMap(map, size);
+	//drawMap(map, size);
 	drawMap(maskMap, size);
 
 	std::cin >> command;
