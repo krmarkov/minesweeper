@@ -1,3 +1,18 @@
+/**
+*
+* Solution to course project #5
+* Introduction to programming course
+* Faculty of Mathematics and Informatics of Sofia University
+* Winter semester 2023/2024
+*
+* @author Kristian Markov
+* @idnumber 7MI0600348
+* @compiler VC
+*
+* <main file>
+*
+*/
+
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
@@ -43,7 +58,6 @@ void instructions()
 	std::cout << "Commands must be enterted like that: command x-coordinate y-coordinate" << std::endl;
 	std::cout << "Possible commands are open/mark/unmark" << std::endl;
 	std::cout << "Example: open 1 3" << std::endl;
-	std::cout << "The coordinates of the top left corner are 0 0" << std::endl;
 	std::cout << "To win you have to open all cells that are not mines" << std::endl;
 	std::cout << "It is not necessary to mark all mine cells. Just don't open them" << std::endl;
 	std::cout << "If you open a mine cell, you lose" << std::endl;
@@ -114,7 +128,7 @@ void createPlainMap(char map[][MAX_SIZE], int size)
 	}
 }
 
-void markMinesOnGrid(char map[][MAX_SIZE], int size, int numberOfMines, int mines[][2])
+void markMinesOnGrid(char map[][MAX_SIZE], int size, int numberOfMines, int mines[MAX_MINES][2])
 {
 	createPlainMap(map, size);
 	generateUniqueRandomCoordinates(size, numberOfMines, mines);
@@ -135,6 +149,8 @@ int checkForAdjacentMines(const char map[][MAX_SIZE], int size, int row, int col
 	{
 		for (int j = -1; j <= 1; j++)
 		{
+			if (row + i >= size or row + i < 0 or column + j >= size or column + j < 0)
+				continue;
 			if (map[row + i][column + j] == '#')
 				counter++;
 		}
@@ -222,6 +238,12 @@ void open(const char map[][MAX_SIZE], char maskMap[][MAX_SIZE],int size, int coo
 		return;
 	}
 
+	if (maskMap[coordX][coordY] != '-')
+	{
+		std::cout << "This cell is already opened" << std::endl;
+		return;
+	}
+
 	if (map[coordX][coordY] == '#')
 	{
 		stillPlaying = false;
@@ -269,6 +291,7 @@ bool isGameWon(const char map[][MAX_SIZE], const char maskMap[][MAX_SIZE], int s
 
 void play(char map[][MAX_SIZE], char maskMap[][MAX_SIZE], char* command, int size, int& coordX, int& coordY, bool& stillPlaying)
 {
+	drawMap(map, size);
 	drawMap(maskMap, size);
 
 	std::cin >> command;
