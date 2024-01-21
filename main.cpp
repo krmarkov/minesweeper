@@ -46,10 +46,12 @@ void validateInput(int& mapSize, int& mines)
 	while (!isValidInput(mapSize, mines));
 }
 
-void areValidCoordinates(int size, int x, int y)
+bool areValidCoordinates(int size, int x, int y)
 {
 	if (x >= size or x < 0 or y >= size or y < 0)
-		std::cout << "Invalid coordinates" << std::endl;
+		return false;
+
+	return true;
 }
 
 void instructions()
@@ -79,44 +81,6 @@ bool areStringsEqual(const char* first, const char* second)
 	return (*first == '\0' && *second == '\0');
 }
 
-int randBetween(int min, int max) 
-{
-	return min + rand() % (max - min + 1); 
-}
-
-void uniqueCoordinates(int size, int mines, const int coordinates[][2], int& x, int& y, int current)
-{
-	bool isUnique = true; 
-	do
-	{
-		x = randBetween(0, size - 1);
-		y = randBetween(0, size - 1);
-		
-		for (int j = 0; j < current; j++)
-		{
-			if (x == coordinates[j][0] && y == coordinates[j][1])
-			{
-				isUnique = false;
-				break;
-			}
-		}
-	}
-	while (!isUnique);
-}
-
-void generateUniqueRandomCoordinates(int size, int mines, int coordinates[][2])
-{
-	for (int i = 0; i < mines; i++)
-	{
-		int x = 0, y = 0;
-
-		uniqueCoordinates(size, mines, coordinates, x, y, i);
-
-		coordinates[i][0] = x;
-		coordinates[i][1] = y;
-	}
-}
-
 void createPlainMap(char map[][MAX_SIZE], int size)
 {
 	for (int i = 0; i < size; i++)
@@ -128,16 +92,28 @@ void createPlainMap(char map[][MAX_SIZE], int size)
 	}
 }
 
-void markMinesOnGrid(char map[][MAX_SIZE], int size, int numberOfMines, int mines[MAX_MINES][2])
+int randBetween(int min, int max, int size) 
+{
+	return min + rand() % size; 
+}
+
+void generateUniqueRandomCoordinates(char map[][MAX_SIZE], int size)
+{
+	int x = randBetween(0, size - 1, size);
+	int y = randBetween(0, size - 1, size);
+	if (map[x][y] != '#')
+		map[x][y] = '#';
+	else
+		generateUniqueRandomCoordinates(map, size);
+}
+
+void markMinesOnMap(char map[][MAX_SIZE], int size, int numberOfMines)
 {
 	createPlainMap(map, size);
-	generateUniqueRandomCoordinates(size, numberOfMines, mines);
 
 	for (int i = 0; i < numberOfMines; i++) 
 	{
-		int x = mines[i][0];
-		int y = mines[i][1];
-		map[x][y] = '#';
+		generateUniqueRandomCoordinates(map, size);
 	}
 }
 
@@ -174,9 +150,9 @@ void numberOfAdjacentMines(char map[][MAX_SIZE], int size)
 	}
 }
 
-void generateMap(char map[][MAX_SIZE], int size, int numberOfMines, int mines[][2])
+void generateMap(char map[][MAX_SIZE], int size, int numberOfMines)
 {
-	markMinesOnGrid(map, size, numberOfMines, mines);
+	markMinesOnMap(map, size, numberOfMines);
 	numberOfAdjacentMines(map, size);
 }
 
@@ -238,7 +214,7 @@ void open(const char map[][MAX_SIZE], char maskMap[][MAX_SIZE],int size, int coo
 		return;
 	}
 
-	if (maskMap[coordX][coordY] != '-')
+	if (maskMap[coordX][coordY] != '-' && areValidCoordinates(size, coordX, coordY))
 	{
 		std::cout << "This cell is already opened" << std::endl;
 		return;
@@ -296,7 +272,8 @@ void play(char map[][MAX_SIZE], char maskMap[][MAX_SIZE], char* command, int siz
 
 	std::cin >> command;
 	std::cin >> coordX >> coordY;
-	areValidCoordinates(size, coordX, coordY);
+	if (!areValidCoordinates(size, coordX, coordY))
+		std::cout << "Invalid coordinates" << std::endl;
 
 	if (areStringsEqual(command, "open"))
 	{
@@ -337,7 +314,6 @@ int main()
 
 	char map[MAX_SIZE][MAX_SIZE];
 	char maskMap[MAX_SIZE][MAX_SIZE];
-	int mineCoordinates[MAX_SIZE][2];
 
 	int x = 0, y = 0;
 	char command[10];
@@ -345,7 +321,7 @@ int main()
 	bool stillPlaying = true;
 
 	instructions();
-	generateMap(map, mapSize, mines, mineCoordinates);
+	generateMap(map, mapSize, mines);
 	createPlainMap(maskMap, mapSize);
 
 	do
