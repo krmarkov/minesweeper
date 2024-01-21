@@ -40,7 +40,7 @@ void validateInput(int& mapSize, int& mines)
 		std::cout << "Enter size of the map (3 <= size <= 10):" << std::endl;
 		std::cin >> mapSize;
 
-		std::cout << "Enter number of hidden mines(1 <= mines <= " << 3 * mapSize <<"):" << std::endl;
+		std::cout << "Enter number of hidden mines (1 <= mines <= " << 3 * mapSize <<"):" << std::endl;
 		std::cin >> mines;
 	} 
 	while (!isValidInput(mapSize, mines));
@@ -224,7 +224,7 @@ void open(const char map[][MAX_SIZE], char maskMap[][MAX_SIZE],int size, int coo
 	{
 		stillPlaying = false;
 		drawMap(map, size);
-		std::cout << "Game over" << std::endl;
+		std::cout << "You lose" << std::endl;
 		return;
 	}
 
@@ -235,7 +235,7 @@ void mark(char maskMap[][MAX_SIZE], int coordX, int coordY)
 {
 	if (maskMap[coordX][coordY] != '-')
 	{
-		std::cout << "Cannot mark revealed cell" << std::endl;
+		std::cout << "Cannot mark opened cell" << std::endl;
 		return;
 	}
 
@@ -245,8 +245,10 @@ void mark(char maskMap[][MAX_SIZE], int coordX, int coordY)
 void unmark(char maskMap[][MAX_SIZE], int coordX, int coordY)
 {
 	if (maskMap[coordX][coordY] != '*')
+	{
 		std::cout << "Cell is not marked" << std::endl;
-
+		return;
+	}
 	maskMap[coordX][coordY] = '-';
 }
 
@@ -299,7 +301,7 @@ void gameWon(const char map[][MAX_SIZE], const char maskMap[][MAX_SIZE], int map
 	if (isGameWon(map, maskMap, mapSize))
 	{
 		drawMap(maskMap, mapSize);
-		std::cout << "You won!" << std::endl;
+		std::cout << "You win!" << std::endl;
 	}
 }
 
